@@ -39,6 +39,16 @@ services:
     ports:
       - "8000:8000"
 
+  sensor-simulator:
+    build: ./sensor-simulator
+    environment:
+      BACKEND_URL: http://backend:8000/telemetry
+      INTERVAL_SECONDS: "3"
+      MACHINE_COUNT: "3"
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   influxdb-data:
   backend-data:
