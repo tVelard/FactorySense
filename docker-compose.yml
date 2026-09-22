@@ -49,6 +49,18 @@ services:
       backend:
         condition: service_healthy
 
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_URL: http://backend:8000
+      BACKEND_WS_URL: ws://backend:8000/ws/alerts
+      PORT: "3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
 volumes:
   influxdb-data:
   backend-data:

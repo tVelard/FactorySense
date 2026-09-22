@@ -1,0 +1,70 @@
+:root {
+  --bg: #14181d;
+  --panel: #1d232b;
+  --text: #e6e9ef;
+  --muted: #8b93a1;
+  --ok: #2fbf71;
+  --warning: #f0a63a;
+  --critical: #e5484d;
+  --accent: #4da3ff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: var(--panel);
+  border-bottom: 1px solid #2a313b;
+}
+
+header h1 { margin: 0; letter-spacing: 0.05em; color: var(--accent); }
+
+.status-pill { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; text-transform: uppercase; }
+.status-pill--ok { background: rgba(47, 191, 113, 0.15); color: var(--ok); }
+.status-pill--warn { background: rgba(240, 166, 58, 0.15); color: var(--warning); }
+
+main { padding: 2rem; display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+
+#machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+
+.machine-card { background: var(--panel); border-radius: 8px; padding: 1rem; border-left: 4px solid var(--ok); }
+.machine-card.status-warning { border-left-color: var(--warning); }
+.machine-card.status-critical { border-left-color: var(--critical); }
+
+.badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase; }
+.badge-ok { background: var(--ok); color: #082b17; }
+.badge-warning { background: var(--warning); color: #2b1c00; }
+.badge-critical { background: var(--critical); color: #2b0405; }
+
+.readings { list-style: none; padding: 0; margin: 0.75rem 0; color: var(--muted); }
+
+.charts { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
+.charts canvas { max-height: 100px; }
+
+#alerts { background: var(--panel); border-radius: 8px; padding: 1rem; height: fit-content; }
+#alert-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+
+.alert { padding: 0.5rem; border-radius: 6px; background: #262d37; font-size: 0.85rem; }
+.alert-warning { border-left: 3px solid var(--warning); }
+.alert-critical { border-left: 3px solid var(--critical); }
+.alert.acknowledged { opacity: 0.5; }
+
+.ack-button {
+  margin-left: 0.5rem;
+  background: var(--accent);
+  border: none;
+  color: #06121f;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+}

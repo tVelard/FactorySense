@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>FactorySense — Tableau de bord</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>FactorySense</h1>
+    <span id="connection-status" class="status-pill status-pill--ok">connecté</span>
+  </header>
+
+  <main>
+    <section id="machines">
+      <% machines.forEach(function(m) { %>
+        <article class="machine-card status-<%= m.status %>" data-machine-id="<%= m.machine_id %>">
+          <h2><%= m.machine_id %></h2>
+          <span class="badge badge-<%= m.status %>"><%= m.status %></span>
+          <ul class="readings">
+            <li>Vibration: <span data-field="vibration"><%= m.latest.vibration %></span> mm/s</li>
+            <li>Température: <span data-field="temperature"><%= m.latest.temperature %></span> °C</li>
+            <li>Pression: <span data-field="pressure"><%= m.latest.pressure %></span> bar</li>
+          </ul>
+          <div class="charts">
+            <canvas data-chart="vibration" data-machine="<%= m.machine_id %>"></canvas>
+            <canvas data-chart="temperature" data-machine="<%= m.machine_id %>"></canvas>
+            <canvas data-chart="pressure" data-machine="<%= m.machine_id %>"></canvas>
+          </div>
+        </article>
+      <% }); %>
+    </section>
+
+    <section id="alerts">
+      <h2>Journal des alertes</h2>
+      <ul id="alert-list">
+        <% activeAlerts.forEach(function(a) { %>
+          <li class="alert alert-<%= a.severity %>" data-alert-id="<%= a.id %>">
+            <strong><%= a.machine_id %></strong> — <%= a.sensor %> (<%= a.severity %>) : <%= a.value %>
+            <button class="ack-button" data-alert-id="<%= a.id %>">Acquitter</button>
+          </li>
+        <% }); %>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    window.__INITIAL__ = <%- JSON.stringify({ machines, activeAlerts }) %>;
+  </script>
+  <script src="/dashboard.js"></script>
+</body>
+</html>
