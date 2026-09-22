@@ -12,10 +12,10 @@ app = FastAPI(title="FactorySense Backend")
 influx_client = influx.get_client()
 db_conn = alerts_db.init_db(config.SQLITE_PATH)
 manager = ConnectionManager()
-known_machines: set[str] = set()
 influx_ready = False
 
 MACHINE_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+RANGE_RE = re.compile(r"^\d+[smhdw]$")
 
 
 class TelemetryIn(BaseModel):
@@ -51,7 +51,6 @@ def health():
 async def post_telemetry(point: TelemetryIn):
     if not MACHINE_ID_RE.match(point.machine_id):
         raise HTTPException(400, "invalid machine_id")
-    known_machines.add(point.machine_id)
     influx.write_point(
         influx_client, point.machine_id, point.vibration, point.temperature, point.pressure, point.timestamp
     )
@@ -71,7 +70,7 @@ async def post_telemetry(point: TelemetryIn):
 @app.get("/machines")
 def get_machines():
     result = []
-    for machine_id in sorted(known_machines):
+    for machine_id in sorted(influx.query_machine_ids(influx_client)):
         latest = influx.query_latest(influx_client, machine_id)
         if latest is None:
             continue
@@ -90,6 +89,8 @@ def get_history(machine_id: str, sensor: str, time_range: str = Query("1h", alia
         raise HTTPException(400, "invalid machine_id")
     if sensor not in config.THRESHOLDS:
         raise HTTPException(400, "invalid sensor")
+    if not RANGE_RE.match(time_range):
+        raise HTTPException(400, "invalid range")
     return influx.query_history(influx_client, machine_id, sensor, time_range)
 
 

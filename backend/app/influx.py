@@ -42,6 +42,23 @@ def query_latest(client, machine_id):
     return result
 
 
+def query_machine_ids(client, window="10m"):
+    # Deviation from the originally suggested implementation: schema.tagValues()
+    # does not honor `start` against this bucket's shard-group duration (168h) —
+    # it returns every machine_id ever written to the current shard regardless of
+    # the window, verified empirically. Filtering the actual measurement data by
+    # range and taking distinct machine_ids gives the correct time-bounded result.
+    flux = f'''
+    from(bucket: "{config.INFLUX_BUCKET}")
+      |> range(start: -{window})
+      |> filter(fn: (r) => r._measurement == "telemetry")
+      |> keep(columns: ["machine_id"])
+      |> distinct(column: "machine_id")
+    '''
+    tables = client.query_api().query(flux, org=config.INFLUX_ORG)
+    return list({record.get_value() for table in tables for record in table.records})
+
+
 def query_history(client, machine_id, sensor, range_str):
     query_api = client.query_api()
     flux = f"""

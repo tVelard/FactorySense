@@ -51,6 +51,10 @@ def create_alert(
     threshold: float,
 ) -> dict:
     raised_at = datetime.now(timezone.utc).isoformat()
+    conn.execute(
+        "UPDATE alerts SET status = 'superseded' WHERE machine_id = ? AND sensor = ? AND status = 'active'",
+        (machine_id, sensor),
+    )
     cur = conn.execute(
         "INSERT INTO alerts (machine_id, sensor, severity, value, threshold, raised_at, status) "
         "VALUES (?, ?, ?, ?, ?, ?, 'active')",

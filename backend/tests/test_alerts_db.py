@@ -25,12 +25,16 @@ def test_create_alert_returns_active_alert_with_expected_fields(tmp_path):
 
 def test_get_active_alert_finds_most_recent_active_alert(tmp_path):
     conn = _new_db(tmp_path)
-    alerts_db.create_alert(conn, "machine-1", "vibration", "warning", 4.5, 4.0)
+    first = alerts_db.create_alert(conn, "machine-1", "vibration", "warning", 4.5, 4.0)
     second = alerts_db.create_alert(conn, "machine-1", "vibration", "critical", 6.5, 6.0)
     active = alerts_db.get_active_alert(conn, "machine-1", "vibration")
     assert active["id"] == second["id"]
     assert active["severity"] == "critical"
 
+    # the escalation should supersede the earlier alert rather than leaving
+    # two "active" rows for the same machine/sensor
+    superseded = alerts_db.get_alert_by_id(conn, first["id"])
+    assert superseded["status"] == "superseded"
 
 def test_list_alerts_filters_by_status_and_machine(tmp_path):
     conn = _new_db(tmp_path)
