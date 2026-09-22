@@ -57,6 +57,7 @@ const browserClients = new Set();
 wss.on('connection', (ws) => {
   browserClients.add(ws);
   ws.on('close', () => browserClients.delete(ws));
+  ws.on('error', () => browserClients.delete(ws));
 });
 
 function broadcastToBrowsers(message) {
@@ -69,7 +70,13 @@ function broadcastToBrowsers(message) {
 function connectUpstream(delay = 1000) {
   const upstream = new WebSocket(BACKEND_WS_URL);
   upstream.on('open', () => console.log('[frontend] connected to backend WS'));
-  upstream.on('message', (data) => broadcastToBrowsers(JSON.parse(data.toString())));
+  upstream.on('message', (data) => {
+    try {
+      broadcastToBrowsers(JSON.parse(data.toString()));
+    } catch (err) {
+      console.error('[frontend] failed to parse upstream WS message:', err.message);
+    }
+  });
   upstream.on('close', () => {
     console.log(`[frontend] backend WS closed, retrying in ${delay}ms`);
     setTimeout(() => connectUpstream(Math.min(delay * 2, 30000)), delay);
