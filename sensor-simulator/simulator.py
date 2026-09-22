@@ -24,7 +24,7 @@ def make_machine_id(local_index: int) -> str:
 
 
 def build_point(machine_id: str, elapsed_seconds: float, drifting: bool) -> dict:
-    drift = elapsed_seconds if drifting else 0.0
+    drift = min(elapsed_seconds, 400.0) if drifting else 0.0
     return {
         "machine_id": machine_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),

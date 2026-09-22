@@ -1,6 +1,5 @@
 (function () {
   const initial = window.__INITIAL__ || { machines: [], activeAlerts: [] };
-  const charts = {};
 
   function severityRank(s) {
     return { ok: 0, warning: 1, critical: 2 }[s] ?? 0;
@@ -79,7 +78,7 @@
     if (!canvas) return;
     const res = await fetch(`/api/history?machine_id=${encodeURIComponent(machineId)}&sensor=${sensor}&range=1h`);
     const points = await res.json();
-    charts[`${machineId}-${sensor}`] = new Chart(canvas, {
+    new Chart(canvas, {
       type: 'line',
       data: {
         labels: points.map((p) => new Date(p.timestamp).toLocaleTimeString()),

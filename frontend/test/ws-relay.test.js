@@ -44,6 +44,16 @@ async function main() {
   assert.strictEqual(msg.alert.machine_id, machineId);
   assert.strictEqual(msg.alert.severity, 'critical');
 
+  const rootRes = await fetch('http://localhost:3000/');
+  assert.strictEqual(rootRes.status, 200, 'expected frontend root to return 200');
+  const rootBody = await rootRes.text();
+  assert.ok(rootBody.includes('machine-card'), 'expected dashboard HTML to contain machine-card');
+
+  const ackRes = await fetch(`http://localhost:3000/api/alerts/${msg.alert.id}/ack`, { method: 'POST' });
+  assert.strictEqual(ackRes.status, 200, 'expected ack proxy route to return 200');
+  const ackBody = await ackRes.json();
+  assert.strictEqual(ackBody.status, 'acknowledged');
+
   ws.close();
   console.log('OK: frontend relayed alert_new over WebSocket');
 }
