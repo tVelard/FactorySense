@@ -58,3 +58,9 @@ docker compose up -d --scale sensor-simulator=1
 - Scaler le service `backend` n'est pas démontré (nécessiterait un load balancer devant, hors scope).
 - Pas de TLS entre services, pas de chiffrement au repos (hors scope prototype, voir la spec section 7).
 - Une alerte reste active jusqu'à acquittement manuel, même si la mesure revient à la normale (choix assumé pour la traçabilité).
+- Les valeurs affichées sur le dashboard et les courbes historiques sont chargées une seule fois au chargement de la page (pas de rafraîchissement automatique) — recharger la page pour voir les données à jour.
+- Une panne d'InfluxDB désactive silencieusement la génération d'alertes (l'écriture de télémétrie échoue avant l'évaluation des seuils).
+- L'ingestion et les accès SQLite sont synchrones sur la boucle d'événements FastAPI — suffisant à l'échelle de la démo, mais ne parallélise pas réellement l'ingestion.
+- `GET /health` ne vérifie la disponibilité d'InfluxDB qu'au démarrage, jamais ensuite.
+- Le token InfluxDB utilisé par le backend a les droits admin (pas de moindre privilège) — à restreindre dans un vrai déploiement.
+- Le statut affiché sur la carte d'une machine (badge) peut diverger brièvement du journal des alertes tant qu'une alerte active n'a pas été acquittée.
