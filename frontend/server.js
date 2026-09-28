@@ -34,6 +34,15 @@ app.get('/', async (req, res) => {
   }
 });
 
+app.get('/api/machines', async (req, res) => {
+  try {
+    const backendRes = await fetch(`${BACKEND_URL}/machines`);
+    res.status(backendRes.status).json(await backendRes.json());
+  } catch (err) {
+    res.status(502).json({ error: 'backend unreachable' });
+  }
+});
+
 app.get('/api/history', async (req, res) => {
   const { machine_id, sensor, range } = req.query;
   try {
@@ -75,7 +84,10 @@ function broadcastToBrowsers(message) {
 
 function connectUpstream(delay = 1000) {
   const upstream = new WebSocket(BACKEND_WS_URL);
-  upstream.on('open', () => console.log('[frontend] connected to backend WS'));
+  upstream.on('open', () => {
+    delay = 1000;
+    console.log('[frontend] connected to backend WS');
+  });
   upstream.on('message', (data) => {
     try {
       broadcastToBrowsers(JSON.parse(data.toString()));

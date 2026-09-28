@@ -7,7 +7,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 function postTelemetry(payload) {
   return fetch(`${BACKEND_URL}/telemetry`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-API-Key': process.env.SENSOR_API_KEY || '' },
     body: JSON.stringify(payload),
   });
 }

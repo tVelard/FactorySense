@@ -182,6 +182,9 @@
     },
   };
 
+  const charts = new Map(); // "machineId|sensor" -> { chart, lastTs }
+  const MAX_POINTS = 1200; // ~1h at the simulator's 3s interval
+
   async function loadChart(machineId, sensorKey) {
     const canvas = document.querySelector(
       `canvas[data-chart="${sensorKey}"][data-machine="${CSS.escape(machineId)}"]`
@@ -199,7 +202,7 @@
     }
     const values = points.map((p) => p.value);
     const max = Math.max(...values, 0);
-    new Chart(canvas, {
+    const chart = new Chart(canvas, {
       type: 'line',
       data: {
         labels: points.map((p) => formatTime(p.timestamp)),
@@ -238,6 +241,59 @@
       },
       plugins: [thresholdLines],
     });
+    charts.set(`${machineId}|${sensorKey}`, { chart, lastTs: points.at(-1)?.timestamp });
+  }
+
+  // Live readings -----------------------------------------------------------
+
+  function level(sensor, value) {
+    if (value >= sensor.critical) return 'critical';
+    if (value >= sensor.warning) return 'warning';
+    return 'ok';
+  }
+
+  function appendPoint(machineId, sensorKey, timestamp, value) {
+    const entry = charts.get(`${machineId}|${sensorKey}`);
+    if (!entry || !timestamp || entry.lastTs === timestamp) return;
+    const { data } = entry.chart;
+    data.labels.push(formatTime(timestamp));
+    data.datasets[0].data.push(value);
+    if (data.labels.length > MAX_POINTS) {
+      data.labels.shift();
+      data.datasets[0].data.shift();
+    }
+    entry.lastTs = timestamp;
+    entry.chart.update('none');
+  }
+
+  async function refreshMachines() {
+    let machines;
+    try {
+      const res = await fetch('/api/machines');
+      if (!res.ok) return;
+      machines = await res.json();
+    } catch (err) {
+      return;
+    }
+    for (const m of machines) {
+      // ponytail: machines added after page load (e.g. --scale) only show up on reload
+      const card = machineCard(m.machine_id);
+      if (!card) continue;
+      setMachineStatus(m.machine_id, m.status);
+      const readings = card.querySelectorAll('.reading');
+      initial.sensors.forEach((sensor, i) => {
+        const value = m.latest[sensor.key];
+        if (typeof value !== 'number' || !readings[i]) return;
+        readings[i].dataset.level = level(sensor, value);
+        readings[i].querySelector('.reading-value').firstChild.textContent = `${value.toFixed(2)} `;
+        appendPoint(m.machine_id, sensor.key, m.latest.timestamp, value);
+      });
+      const time = card.querySelector('.machine-foot time');
+      if (time && m.latest.timestamp) {
+        time.dateTime = m.latest.timestamp;
+        time.textContent = formatTime(m.latest.timestamp);
+      }
+    }
   }
 
   // Init --------------------------------------------------------------------
@@ -252,4 +308,5 @@
     Object.keys(SENSORS).forEach((sensor) => loadChart(m.machine_id, sensor));
   });
   connectWebSocket();
+  setInterval(refreshMachines, 5000);
 })();

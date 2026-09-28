@@ -9,6 +9,7 @@ import httpx
 
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://backend:8000/telemetry")
 INTERVAL_SECONDS = float(os.environ.get("INTERVAL_SECONDS", "3"))
+API_KEY = os.environ["SENSOR_API_KEY"]
 MACHINE_COUNT = int(os.environ.get("MACHINE_COUNT", "3"))
 
 BASELINES = {"vibration": 2.0, "temperature": 45.0, "pressure": 5.0}
@@ -49,7 +50,7 @@ async def run_machine(client: httpx.AsyncClient, local_index: int, drifting: boo
 
 
 async def main():
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(headers={"X-API-Key": API_KEY}) as client:
         tasks = [run_machine(client, i, drifting=(i == 0)) for i in range(MACHINE_COUNT)]
         await asyncio.gather(*tasks)
 
