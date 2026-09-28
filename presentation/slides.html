@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FactorySense — Soutenance</title>
+<!--
+  Édition : chaque diapositive est une <section class="slide">. Modifier le texte directement.
+  Export PDF : ouvrir dans Chrome → Imprimer → Enregistrer au format PDF,
+  marges « Aucune », cocher « Graphiques d'arrière-plan ». Le format 16:9 est déjà réglé.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #ffffff;
+    --ink: #111111;
+    --ink-2: #4a4a4a;   /* texte secondaire, 8.9:1 sur blanc */
+    --ink-3: #6b6b6b;   /* pieds de page, 5.3:1 */
+    --rule: #d6d6d6;
+    --accent: #1f36c7;  /* outremer : la seule couleur */
+    --desk: #e9e9e9;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  ::selection { background: var(--accent); color: var(--paper); }
+
+  body {
+    background: var(--desk);
+    color: var(--ink);
+    font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-feature-settings: "tnum" 1;
+    -webkit-font-smoothing: antialiased;
+    padding: 32px 16px;
+    display: grid;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  /* ---- Diapositive : 1280 × 720, mise à l'échelle par unités de conteneur ---- */
+  .slide {
+    width: min(1280px, calc(100vw - 32px));
+    aspect-ratio: 16 / 9;
+    background: var(--paper);
+    container-type: inline-size;
+    overflow: hidden;
+  }
+  .page {
+    --u: calc(100cqw / 1280);          /* 1 px de la maquette 1280 × 720 */
+    width: 100%;
+    height: 100%;
+    padding: calc(52 * var(--u)) calc(64 * var(--u)) calc(36 * var(--u));
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: calc(24 * var(--u));
+    font-size: calc(18 * var(--u));
+    line-height: 1.4;
+  }
+
+  /* ---- En-tête commun ---- */
+  .head {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    align-items: last baseline;
+    padding-bottom: calc(18 * var(--u));
+    border-bottom: calc(4 * var(--u)) solid var(--ink);
+  }
+  .num {
+    grid-column: 1 / 3;
+    font-weight: 800;
+    font-size: calc(96 * var(--u));
+    line-height: 0.78;
+    letter-spacing: -0.04em;
+    color: var(--accent);
+  }
+  .head h2 {
+    grid-column: 3 / -1;
+    font-weight: 800;
+    font-size: calc(44 * var(--u));
+    line-height: 1;
+    letter-spacing: -0.025em;
+  }
+
+  /* ---- Corps ---- */
+  .body {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    align-content: start;
+    padding-top: calc(28 * var(--u));
+    min-height: 0;
+  }
+  .lead {
+    font-weight: 600;
+    font-size: calc(30 * var(--u));
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  h3 {
+    font-weight: 800;
+    font-size: calc(19 * var(--u));
+    line-height: 1.2;
+    padding-bottom: calc(10 * var(--u));
+    margin-bottom: calc(12 * var(--u));
+    border-bottom: 1px solid var(--ink);
+  }
+  h3.accent { color: var(--accent); border-color: var(--accent); }
+  p + p { margin-top: calc(10 * var(--u)); }
+  .muted { color: var(--ink-2); }
+
+  ul.items { list-style: none; }
+  ul.items li {
+    padding: calc(9 * var(--u)) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  ul.items li:last-child { border-bottom: 0; }
+  ul.items b { font-weight: 600; }
+
+  code, .mono {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.86em;
+    letter-spacing: -0.01em;
+  }
+
+  /* ---- Tableaux : filets seulement ---- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: calc(17 * var(--u));
+    line-height: 1.3;
+  }
+  th {
+    text-align: left;
+    font-weight: 800;
+    font-size: calc(15 * var(--u));
+    padding: 0 calc(14 * var(--u)) calc(8 * var(--u)) 0;
+    border-bottom: 1px solid var(--ink);
+    vertical-align: bottom;
+  }
+  td {
+    padding: calc(7 * var(--u)) calc(14 * var(--u)) calc(7 * var(--u)) 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: 1px solid var(--ink); }
+  td:first-child { font-weight: 600; }
+  th.accent { color: var(--accent); }
+
+  /* ---- Pied de page ---- */
+  .foot {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    padding-top: calc(12 * var(--u));
+    border-top: 1px solid var(--rule);
+    font-size: calc(12 * var(--u));
+    color: var(--ink-3);
+  }
+
+  /* ---- Diapo 0 ---- */
+  .cover .page { grid-template-rows: auto 1fr auto auto auto; }
+  .cover .top { grid-column: 1 / 5; }
+  .cover .title {
+    grid-column: 1 / -1;
+    align-self: end;
+    padding-bottom: calc(40 * var(--u));
+  }
+  .cover h1 {
+    font-weight: 800;
+    font-size: calc(96 * var(--u));
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+  .cover .sub {
+    margin-top: calc(22 * var(--u));
+    max-width: calc(760 * var(--u));
+    font-size: calc(28 * var(--u));
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--ink-2);
+  }
+  .cover .bar { grid-column: 1 / -1; border-top: calc(4 * var(--u)) solid var(--ink); }
+  .cover .people {
+    grid-column: 1 / 9;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: calc(24 * var(--u));
+    padding-top: calc(16 * var(--u));
+  }
+  .cover .people span { font-size: calc(20 * var(--u)); font-weight: 600; }
+  .cover .meta {
+    grid-column: 9 / -1;
+    padding-top: calc(16 * var(--u));
+    text-align: right;
+    font-size: calc(15 * var(--u));
+    color: var(--ink-2);
+  }
+  .cover .label {
+    grid-column: 1 / -1;
+    padding-top: calc(28 * var(--u));
+    font-size: calc(12 * var(--u));
+    color: var(--ink-3);
+  }
+
+  /* ---- Diapo 3 : schéma ---- */
+  .diagram svg { width: 100%; height: auto; display: block; }
+  .diagram text { font-family: "Archivo", sans-serif; fill: var(--ink); }
+  .diagram .box { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+  .diagram .ghost { fill: var(--paper); stroke: var(--ink); stroke-width: 1; }
+  .diagram .data { fill: var(--accent); }
+  .diagram .edge { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+  .diagram .lbl { font-size: 15px; fill: var(--ink-2); }
+  .diagram .name { font-size: 18px; font-weight: 800; }
+  .diagram .role { font-size: 15px; fill: var(--ink-2); }
+  .diagram text.data-t { fill: var(--paper); }
+  .diagram .zone { fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 4; }
+  .diagram .dash { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .diagram .zone-t { font-size: 14px; font-weight: 600; fill: var(--ink-3); letter-spacing: 0.04em; }
+  .legend {
+    display: flex;
+    gap: calc(28 * var(--u));
+    margin-top: calc(14 * var(--u));
+    font-size: calc(15 * var(--u));
+    color: var(--ink-2);
+  }
+  .legend span { display: flex; align-items: center; }
+  .legend .sw {
+    flex: none;
+    width: calc(28 * var(--u));
+    height: calc(16 * var(--u));
+    margin-right: calc(8 * var(--u));
+    vertical-align: -0.2em;
+  }
+
+  .cmd {
+    margin-top: calc(10 * var(--u));
+    padding-top: calc(10 * var(--u));
+    border-top: 1px solid var(--rule);
+    font-size: calc(15 * var(--u));
+    line-height: 1.5;
+    color: var(--ink-2);
+    white-space: pre;
+  }
+  .cmd code { color: var(--ink); font-size: 1em; }
+
+  /* ---- Impression / PDF ---- */
+  @page { size: 1280px 720px; margin: 0; }
+  @media print {
+    body { background: var(--paper); padding: 0; gap: 0; display: block; }
+    .slide { width: 1280px; break-after: page; }
+    .slide:last-child { break-after: auto; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================ 0 · Membres ============================ -->
+<section class="slide cover" aria-label="Diapositive 0 : membres du groupe">
+  <div class="page">
+    <span class="num top">00</span>
+    <div class="title">
+      <h1>FactorySense</h1>
+      <p class="sub">Surveiller les équipements de production en temps réel pour éviter les arrêts coûteux.</p>
+    </div>
+    <div class="bar"></div>
+    <div class="people">
+      <span>[Prénom Nom]</span>
+      <span>[Prénom Nom]</span>
+      <span>[Prénom Nom]</span>
+      <span>[Prénom Nom]</span>
+    </div>
+    <div class="meta">Télécom Paris<br>Septembre 2026</div>
+    <p class="label">Membres du groupe · Présentation et prototype Docker Compose</p>
+  </div>
+</section>
+
+<!-- ========================= 1 · Besoins métier ========================= -->
+<section class="slide" aria-label="Diapositive 1 : besoins métier">
+  <div class="page">
+    <header class="head">
+      <span class="num">01</span>
+      <h2>Besoins métier</h2>
+    </header>
+
+    <div class="body">
+      <p class="lead" style="grid-column: 1 / 10;">Voir une machine dériver avant qu’elle tombe en panne, et prouver que chaque alerte a été prise en charge.</p>
+
+      <div style="grid-column: 1 / 5; margin-top: calc(36 * var(--u));">
+        <h3>Ingénieurs de production</h3>
+        <ul class="items">
+          <li><b>L’état du parc en un coup d’œil</b> : un statut par machine, normal, avertissement ou critique.</li>
+          <li><b>Les tendances historiques</b> de vibration, température et pression pour comprendre une dérive.</li>
+          <li><b>Des seuils explicites</b> par capteur, avertissement puis critique.</li>
+        </ul>
+      </div>
+
+      <div style="grid-column: 5 / 9; margin-top: calc(36 * var(--u));">
+        <h3>Équipes de maintenance</h3>
+        <ul class="items">
+          <li><b>Une alerte en temps réel</b> dès qu’un seuil est franchi, sans recharger la page.</li>
+          <li><b>Prioriser</b> : le critique avant l’avertissement, une seule alerte par franchissement.</li>
+          <li><b>Acquitter</b> l’alerte : l’heure de prise en charge reste enregistrée.</li>
+        </ul>
+      </div>
+
+      <div style="grid-column: 9 / -1; margin-top: calc(36 * var(--u));">
+        <h3 class="accent">Bénéfices attendus</h3>
+        <ul class="items">
+          <li><b>Moins d’arrêts non planifiés</b> : la maintenance intervient pendant la dérive, pas après la casse.</li>
+          <li><b>Économies</b> : interventions planifiées plutôt qu’en urgence, pièces remplacées avant d’endommager le reste.</li>
+          <li><b>Conformité</b> : journal horodaté des alertes et des acquittements, exploitable en audit.</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="foot"><span>FactorySense</span><span>1 / 4</span></footer>
+  </div>
+</section>
+
+<!-- ======================= 2 · Besoins techniques ======================= -->
+<section class="slide" aria-label="Diapositive 2 : besoins techniques">
+  <div class="page">
+    <header class="head">
+      <span class="num">02</span>
+      <h2>Besoins techniques</h2>
+    </header>
+
+    <div class="body">
+      <div style="grid-column: 1 / 7;">
+        <h3>Services à développer</h3>
+        <table>
+          <thead><tr><th>Service</th><th>Rôle</th><th>Brique</th></tr></thead>
+          <tbody>
+            <tr><td>Ingestion</td><td>Télémétrie de capteurs authentifiés</td><td>FastAPI</td></tr>
+            <tr><td>Détection</td><td>Seuils : une alerte par franchissement</td><td>FastAPI</td></tr>
+            <tr><td>Séries temporelles</td><td>Historique des mesures</td><td>InfluxDB</td></tr>
+            <tr><td>Alertes</td><td>État actif → acquitté, partagé</td><td>PostgreSQL</td></tr>
+            <tr><td>Temps réel</td><td>Pousser les alertes au navigateur</td><td>WebSocket</td></tr>
+            <tr><td>Visualisation</td><td>Tableau de bord, courbes</td><td>Node</td></tr>
+            <tr><td>Répartition</td><td>Charge répartie entre répliques</td><td>nginx</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="grid-column: 7 / -1;">
+        <h3 class="accent">Données à stocker et sécuriser</h3>
+        <table>
+          <thead><tr><th>Donnée</th><th>Enjeu</th><th>Protection</th></tr></thead>
+          <tbody>
+            <tr><td>Télémétrie</td><td>Intégrité : une mesure falsifiée masque une panne</td><td>Capteurs authentifiés, entrées validées</td></tr>
+            <tr><td>Journal des alertes</td><td>Registre de maintenance, preuve en audit</td><td>Base interne, non exposée</td></tr>
+            <tr><td>Secrets</td><td>Tokens, mots de passe, clé des capteurs</td><td><code>.env</code> hors du dépôt</td></tr>
+            <tr><td>Seuils</td><td>Un seuil erroné rend l’alerte muette</td><td>Versionnés avec le code</td></tr>
+          </tbody>
+        </table>
+        <p class="muted" style="margin-top: calc(18 * var(--u));">Exigences transverses : montée en charge horizontale, redémarrage automatique, démarrage en une commande.</p>
+      </div>
+    </div>
+
+    <footer class="foot"><span>FactorySense</span><span>2 / 4</span></footer>
+  </div>
+</section>
+
+<!-- ======================= 3 · Architecture ======================= -->
+<section class="slide" aria-label="Diapositive 3 : architecture proposée">
+  <div class="page">
+    <header class="head">
+      <span class="num">03</span>
+      <h2>Architecture proposée</h2>
+    </header>
+
+    <div class="body">
+      <figure class="diagram" style="grid-column: 1 / 8;">
+        <svg viewBox="0 0 700 444" role="img" aria-label="Schéma : sur site, simulateurs et navigateur passent par nginx vers frontend et backend répliqués ; le backend écrit dans InfluxDB et PostgreSQL. Cible : historique répliqué vers un cloud public PaaS.">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,1 L9,5 L0,9 z" fill="#111111"/>
+            </marker>
+          </defs>
+
+          <!-- zone sur site : le prototype -->
+          <rect class="zone" x="174" y="2" width="522" height="362"/>
+          <text class="zone-t" x="186" y="22">SUR SITE · CLOUD PRIVÉ IaaS · prototype Docker Compose</text>
+
+          <!-- clients -->
+          <rect class="box" x="4" y="50" width="120" height="58"/>
+          <text class="name" x="16" y="76">Navigateur</text>
+          <text class="role" x="16" y="96">ingénieurs</text>
+
+          <rect class="ghost" x="12" y="232" width="120" height="58"/>
+          <rect class="ghost" x="8" y="236" width="120" height="58"/>
+          <rect class="box" x="4" y="240" width="120" height="58"/>
+          <text class="name" x="16" y="266">Capteurs</text>
+          <text class="role" x="16" y="286">simulés ×N</text>
+
+          <!-- nginx -->
+          <rect class="box" x="190" y="50" width="92" height="248"/>
+          <text class="name" x="200" y="76">nginx</text>
+          <text class="role" x="200" y="96">répartition</text>
+          <text class="role" x="200" y="114">de charge</text>
+
+          <!-- frontend -->
+          <rect class="ghost" x="338" y="42" width="150" height="58"/>
+          <rect class="ghost" x="334" y="46" width="150" height="58"/>
+          <rect class="box" x="330" y="50" width="150" height="58"/>
+          <text class="name" x="342" y="76">frontend ×N</text>
+          <text class="role" x="342" y="96">Node · interface</text>
+
+          <!-- backend -->
+          <rect class="ghost" x="338" y="232" width="150" height="58"/>
+          <rect class="ghost" x="334" y="236" width="150" height="58"/>
+          <rect class="box" x="330" y="240" width="150" height="58"/>
+          <text class="name" x="342" y="266">backend ×N</text>
+          <text class="role" x="342" y="286">FastAPI · seuils</text>
+
+          <!-- données -->
+          <rect class="data" x="540" y="150" width="146" height="58"/>
+          <text class="name data-t" x="552" y="176">InfluxDB</text>
+          <text class="role data-t" x="552" y="196">télémétrie</text>
+
+          <rect class="data" x="540" y="262" width="146" height="58"/>
+          <text class="name data-t" x="552" y="288">PostgreSQL</text>
+          <text class="role data-t" x="552" y="308">alertes</text>
+
+          <!-- flux -->
+          <path class="edge" d="M124,79 H188" marker-end="url(#arr)"/>
+          <text class="lbl" x="130" y="71">:3000</text>
+          <path class="edge" d="M124,269 H188" marker-end="url(#arr)"/>
+          <text class="lbl" x="136" y="261">POST</text>
+          <path class="edge" d="M282,79 H328" marker-end="url(#arr)"/>
+          <path class="edge" d="M282,269 H328" marker-end="url(#arr)"/>
+          <path class="edge" d="M405,108 V180 H284" marker-end="url(#arr)"/>
+          <text class="lbl" x="414" y="140">REST + WebSocket</text>
+          <text class="lbl" x="414" y="158">vers le backend</text>
+          <path class="edge" d="M480,256 H510 V179 H538" marker-end="url(#arr)"/>
+          <path class="edge" d="M480,282 H510 V291 H538" marker-end="url(#arr)"/>
+          <path class="edge" d="M580,320 V340 H405 V300" marker-end="url(#arr)"/>
+          <text class="lbl" x="414" y="356">NOTIFY → toutes les répliques</text>
+
+          <!-- cible cloud public -->
+          <rect class="dash" x="174" y="382" width="522" height="58"/>
+          <text class="zone-t" x="186" y="403">CLOUD PUBLIC · PaaS · cible, hors prototype</text>
+          <text class="role" x="186" y="428">Réplique de l’historique, consultation hors site, bases managées</text>
+        </svg>
+        <div class="legend">
+          <span><svg class="sw" viewBox="0 0 28 16" aria-hidden="true"><rect x="7" y="0.5" width="20" height="11" fill="#fff" stroke="#111" stroke-width="1"/><rect x="4" y="2.5" width="20" height="11" fill="#fff" stroke="#111" stroke-width="1"/><rect x="1" y="4.5" width="20" height="11" fill="#fff" stroke="#111" stroke-width="1.5"/></svg>sans état · se réplique avec&nbsp;<code>--scale</code></span>
+          <span><svg class="sw" viewBox="0 0 28 16" aria-hidden="true"><rect x="1" y="4.5" width="20" height="11" fill="#1f36c7"/></svg>avec état · volume persistant</span>
+        </div>
+      </figure>
+
+      <div style="grid-column: 8 / -1;">
+        <h3 class="accent">Déploiement hybride</h3>
+        <ul class="items">
+          <li><b>Sur site — cloud privé, IaaS.</b> Ingestion, détection, alertes et tableau de bord temps réel : latence faible, réseau industriel isolé, fonctionne sans Internet.</li>
+          <li><b>Cloud public — PaaS.</b> Historique long terme et consultation hors site sur bases managées : élastique, sans exploitation.</li>
+        </ul>
+        <h3 style="margin-top: calc(18 * var(--u));">Prototype : Docker Compose</h3>
+        <p>6 services, démarrés en une commande. Les services sans état se répliquent à chaud.</p>
+        <pre class="cmd"><code>docker compose up -d \
+  --scale backend=3 \
+  --scale frontend=2 \
+  --scale sensor-simulator=3</code></pre>
+      </div>
+    </div>
+
+    <footer class="foot"><span>FactorySense</span><span>3 / 4</span></footer>
+  </div>
+</section>
+
+<!-- =================== 4 · Risques et atténuation =================== -->
+<section class="slide" aria-label="Diapositive 4 : analyse des risques et atténuation">
+  <div class="page">
+    <header class="head">
+      <span class="num">04</span>
+      <h2>Risques et atténuation</h2>
+    </header>
+
+    <div class="body">
+      <table style="grid-column: 1 / -1;">
+        <colgroup>
+          <col style="width: 20%"><col style="width: 22%"><col style="width: 29%"><col style="width: 29%">
+        </colgroup>
+        <thead>
+          <tr><th>Menace</th><th>Conséquence</th><th class="accent">Dans le prototype</th><th>En production</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Usurpation de capteur</td><td>Alerte masquée ou déclenchée à tort</td><td>Clé API sur l’ingestion (refus 401), données validées</td><td>Identité propre à chaque capteur (mTLS), détection d’anomalies</td></tr>
+          <tr><td>Accès non autorisé</td><td>Un tiers acquitte des alertes</td><td>Tableau de bord sans authentification ; API et bases non exposées</td><td>Authentification unique (OIDC) et rôles opérateur / ingénieur</td></tr>
+          <tr><td>Fuite de données</td><td>Cadence de production divulguée</td><td>Secrets hors du dépôt ; token InfluxDB aux droits admin</td><td>TLS entre services, chiffrement au repos, coffre à secrets</td></tr>
+          <tr><td>Altération, injection</td><td>Historique falsifié</td><td>Requêtes Flux filtrées, SQL paramétré</td><td>Journal d’audit inaltérable, sauvegardes</td></tr>
+          <tr><td>Panne de capteur</td><td>La panne passe inaperçue</td><td>Non couvert</td><td>Alerte « capteur muet », tampon local</td></tr>
+          <tr><td>Panne d’un service</td><td>Alertes perdues, supervision aveugle</td><td>Redémarrage auto, services répliqués ; bases et nginx uniques</td><td>Bases répliquées, répartiteur redondant</td></tr>
+        </tbody>
+      </table>
+      <p class="lead" style="grid-column: 1 / -1; margin-top: calc(20 * var(--u)); font-size: calc(22 * var(--u));">Risques résiduels : tableau de bord sans authentification, clé capteur partagée, bases uniques. Une panne d’InfluxDB suspend la détection.</p>
+    </div>
+
+    <footer class="foot"><span>FactorySense</span><span>4 / 4</span></footer>
+  </div>
+</section>
+
+</body>
+</html>
