@@ -1,52 +1,100 @@
-<!DOCTYPE html>
+<%
+  const STATUS_LABELS = { ok: 'Normal', warning: 'Avertissement', critical: 'Critique' };
+  function level(sensor, value) {
+    if (value >= sensor.critical) return 'critical';
+    if (value >= sensor.warning) return 'warning';
+    return 'ok';
+  }
+  function fmt(value) {
+    return typeof value === 'number' ? value.toFixed(2) : '—';
+  }
+  const counts = { ok: 0, warning: 0, critical: 0 };
+  machines.forEach(function(m) { counts[m.status] = (counts[m.status] || 0) + 1; });
+%><!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>FactorySense — Tableau de bord</title>
   <link rel="stylesheet" href="/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>FactorySense</h1>
-    <span id="connection-status" class="status-pill status-pill--ok">connecté</span>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-name">FactorySense</span>
+      <span class="brand-context">Supervision des machines</span>
+    </div>
+    <div class="topbar-meta">
+      <p class="fleet-summary" id="fleet-summary">
+        <span><strong data-count="total"><%= machines.length %></strong> machine<%= machines.length > 1 ? 's' : '' %></span>
+        <span class="fleet-summary-item fleet-summary-item--warning"><strong data-count="warning"><%= counts.warning %></strong> en avertissement</span>
+        <span class="fleet-summary-item fleet-summary-item--critical"><strong data-count="critical"><%= counts.critical %></strong> critique<%= counts.critical > 1 ? 's' : '' %></span>
+      </p>
+      <span id="connection-status" class="connection" data-state="connecting" role="status">Connexion…</span>
+    </div>
   </header>
 
-  <main>
-    <section id="machines">
-      <% machines.forEach(function(m) { %>
-        <article class="machine-card status-<%= m.status %>" data-machine-id="<%= m.machine_id %>">
-          <h2><%= m.machine_id %></h2>
-          <span class="badge badge-<%= m.status %>"><%= m.status %></span>
-          <ul class="readings">
-            <li>Vibration: <span data-field="vibration"><%= m.latest.vibration %></span> mm/s</li>
-            <li>Température: <span data-field="temperature"><%= m.latest.temperature %></span> °C</li>
-            <li>Pression: <span data-field="pressure"><%= m.latest.pressure %></span> bar</li>
-          </ul>
-          <div class="charts">
-            <canvas data-chart="vibration" data-machine="<%= m.machine_id %>"></canvas>
-            <canvas data-chart="temperature" data-machine="<%= m.machine_id %>"></canvas>
-            <canvas data-chart="pressure" data-machine="<%= m.machine_id %>"></canvas>
-          </div>
-        </article>
-      <% }); %>
+  <main class="layout">
+    <section class="machines" aria-labelledby="machines-title">
+      <div class="section-head">
+        <h1 id="machines-title">Machines</h1>
+        <p class="section-note">Tendances sur la dernière heure · seuils d'avertissement et critiques en pointillés</p>
+      </div>
+
+      <% if (machines.length === 0) { %>
+        <div class="empty">
+          <% if (loadError) { %>
+            <p class="empty-title">Impossible de joindre le backend</p>
+            <p>Les données machines n'ont pas pu être chargées. Vérifiez que le service backend est démarré, puis rechargez la page.</p>
+          <% } else { %>
+            <p class="empty-title">Aucune machine connectée</p>
+            <p>Les machines apparaissent ici dès leur première mesure de télémétrie.</p>
+          <% } %>
+        </div>
+      <% } %>
+
+      <div class="machine-grid">
+        <% machines.forEach(function(m) { %>
+          <article class="machine-card" data-status="<%= m.status %>" data-machine-id="<%= m.machine_id %>">
+            <header class="machine-head">
+              <h2 class="machine-id"><%= m.machine_id %></h2>
+              <span class="status" data-status="<%= m.status %>"><%= STATUS_LABELS[m.status] || m.status %></span>
+            </header>
+            <% sensors.forEach(function(s) { const v = m.latest[s.key]; %>
+              <div class="reading" data-level="<%= typeof v === 'number' ? level(s, v) : 'ok' %>">
+                <div class="reading-head">
+                  <span class="reading-label"><%= s.label %></span>
+                  <span class="reading-value"><%= fmt(v) %> <span class="reading-unit"><%= s.unit %></span></span>
+                </div>
+                <div class="reading-chart">
+                  <canvas data-chart="<%= s.key %>" data-machine="<%= m.machine_id %>" aria-label="<%= s.label %> sur la dernière heure" role="img"></canvas>
+                </div>
+              </div>
+            <% }); %>
+            <% if (m.latest.timestamp) { %>
+              <p class="machine-foot">Dernier relevé <time datetime="<%= m.latest.timestamp %>" data-local-time><%= m.latest.timestamp %></time></p>
+            <% } %>
+          </article>
+        <% }); %>
+      </div>
     </section>
 
-    <section id="alerts">
-      <h2>Journal des alertes</h2>
-      <ul id="alert-list">
-        <% activeAlerts.forEach(function(a) { %>
-          <li class="alert alert-<%= a.severity %>" data-alert-id="<%= a.id %>">
-            <strong><%= a.machine_id %></strong> — <%= a.sensor %> (<%= a.severity %>) : <%= a.value %>
-            <button class="ack-button" data-alert-id="<%= a.id %>">Acquitter</button>
-          </li>
-        <% }); %>
-      </ul>
+    <section class="alerts" aria-labelledby="alerts-title">
+      <div class="section-head">
+        <h2 id="alerts-title">Journal des alertes</h2>
+        <span class="count" id="alert-count"><%= activeAlerts.length %></span>
+      </div>
+      <p class="empty empty--compact" id="alert-empty" <%= activeAlerts.length ? 'hidden' : '' %>>
+        Aucune alerte active. Les dépassements de seuil s'affichent ici en temps réel.
+      </p>
+      <ol id="alert-list" class="alert-list"></ol>
     </section>
   </main>
 
   <script>
-    window.__INITIAL__ = <%- JSON.stringify({ machines, activeAlerts }) %>;
+    window.__INITIAL__ = <%- JSON.stringify({ machines, activeAlerts, sensors }).replace(/</g, '\\u003c') %>;
   </script>
   <script src="/dashboard.js"></script>
 </body>

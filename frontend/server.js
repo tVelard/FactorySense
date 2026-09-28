@@ -7,6 +7,13 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://backend:8000';
 const BACKEND_WS_URL = process.env.BACKEND_WS_URL || 'ws://backend:8000/ws/alerts';
 const PORT = process.env.PORT || 3000;
 
+// ponytail: mirror of backend/app/config.py THRESHOLDS; serve them from the backend if they become configurable
+const SENSORS = [
+  { key: 'vibration', label: 'Vibration', unit: 'mm/s', warning: 4.0, critical: 6.0 },
+  { key: 'temperature', label: 'Température', unit: '°C', warning: 70.0, critical: 85.0 },
+  { key: 'pressure', label: 'Pression', unit: 'bar', warning: 8.0, critical: 10.0 },
+];
+
 const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -20,10 +27,10 @@ app.get('/', async (req, res) => {
     ]);
     const machines = await machinesRes.json();
     const activeAlerts = await alertsRes.json();
-    res.render('dashboard', { machines, activeAlerts });
+    res.render('dashboard', { machines, activeAlerts, sensors: SENSORS, loadError: false });
   } catch (err) {
     console.error('[frontend] failed to load initial state:', err.message);
-    res.render('dashboard', { machines: [], activeAlerts: [] });
+    res.render('dashboard', { machines: [], activeAlerts: [], sensors: SENSORS, loadError: true });
   }
 });
 
