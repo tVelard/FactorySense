@@ -15,9 +15,11 @@ Conception complète : `docs/superpowers/specs/2026-09-22-factorysense-design.md
 ## Démarrage
 
 ```bash
-cp .env.example .env
+cp .env.example .env   # identifiants InfluxDB, à personnaliser
 docker compose up -d --build
 ```
+
+`docker compose up` démarre toute la stack, simulation comprise. Sans `.env`, Compose s'arrête avec un message explicite.
 
 Dashboard : http://localhost:3000
 
