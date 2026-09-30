@@ -4,12 +4,12 @@ Prototype Docker Compose qui surveille des machines en temps réel : des capteur
 
 | Service | Rôle | Scalable |
 |---|---|---|
-| `lb` | nginx, point d'entrée unique, répartit la charge sur `frontend` et `backend` | non |
+| `load-balancer` | nginx, point d'entrée unique, répartit la charge sur `frontend` et `backend` | non |
 | `frontend` | Dashboard Node/Express : mesures, courbes, alertes en direct | oui |
 | `backend` | API FastAPI : ingestion, détection des seuils, alertes, WebSocket | oui |
 | `sensor-simulator` | Simule 3 machines, dont une qui dérive progressivement | oui |
-| `influxdb` | Stocke la télémétrie (séries temporelles) | non |
-| `postgres` | Stocke les alertes, partagées par toutes les répliques du backend | non |
+| `telemetry-db` | InfluxDB : stocke la télémétrie (séries temporelles) | non |
+| `alerts-db` | PostgreSQL : stocke les alertes, partagées par toutes les répliques du backend | non |
 
 ## Démarrage
 
@@ -39,7 +39,7 @@ python -m pytest tests/ -v
 cd ..
 
 # relais WebSocket du frontend
-docker compose exec -e BACKEND_URL=http://lb:8000 -e SENSOR_API_KEY frontend node test/ws-relay.test.js
+docker compose exec -e BACKEND_URL=http://load-balancer:8000 -e SENSOR_API_KEY frontend node test/ws-relay.test.js
 ```
 
 ## Scalabilité
@@ -92,7 +92,7 @@ Revenir à une seule réplique : `docker compose up -d --scale backend=1 --scale
 | Dossier | Contenu |
 |---|---|
 | `backend/`, `frontend/`, `sensor-simulator/` | Code des services |
-| `lb/` | Configuration nginx |
-| `db/` | Schéma PostgreSQL, appliqué au premier démarrage |
+| `load-balancer/` | Configuration nginx du load balancer |
+| `alerts-db/` | Schéma PostgreSQL des alertes, appliqué au premier démarrage |
 | `presentation/` | Slides de soutenance (PDF, PPTX, HTML) |
 | `docs/` | [Consigne du projet](docs/consigne.md) et spécification de conception |

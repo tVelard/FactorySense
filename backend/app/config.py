@@ -6,7 +6,7 @@ THRESHOLDS = {
     "pressure": {"warning": 8.0, "critical": 10.0, "unit": "bar"},
 }
 
-INFLUX_URL = os.environ.get("INFLUX_URL", "http://influxdb:8086")
+INFLUX_URL = os.environ.get("INFLUX_URL", "http://telemetry-db:8086")
 INFLUX_TOKEN = os.environ.get("INFLUX_TOKEN", "")
 INFLUX_ORG = os.environ.get("INFLUX_ORG", "factorysense")
 INFLUX_BUCKET = os.environ.get("INFLUX_BUCKET", "telemetry")
