@@ -1,4 +1,4 @@
-# FactorySense — Surveillance IoT industrielle
+# FactorySense
 
 Prototype Docker Compose qui surveille des machines en temps réel : des capteurs simulés envoient vibration, température et pression, le backend détecte les dépassements de seuil et le dashboard affiche les mesures et les alertes en direct.
 
@@ -45,7 +45,7 @@ docker compose exec -e BACKEND_URL=http://load-balancer:8000 -e SENSOR_API_KEY f
 ## Scalabilité
 
 ```bash
-docker compose up -d --scale backend=3 --scale frontend=2 --scale sensor-simulator=3
+docker compose up -d --scale backend=3 --scale sensor-simulator=3
 ```
 
 - nginx découvre automatiquement les nouvelles répliques via le DNS de Docker et répartit les requêtes entre elles.
