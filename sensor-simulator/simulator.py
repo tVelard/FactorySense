@@ -13,9 +13,6 @@ API_KEY = os.environ["SENSOR_API_KEY"]
 MACHINE_COUNT = int(os.environ.get("MACHINE_COUNT", "3"))
 
 BASELINES = {"vibration": 2.0, "temperature": 45.0, "pressure": 5.0}
-# Drift rates (per second of container uptime) applied only to the first
-# simulated machine in each container, so the demo shows one machine
-# degrading toward failure while its siblings stay in the "ok" band.
 VIBRATION_DRIFT_PER_SECOND = 0.02
 TEMPERATURE_DRIFT_PER_SECOND = 0.08
 

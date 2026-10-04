@@ -11,6 +11,37 @@ Prototype Docker Compose qui surveille des machines en temps réel : des capteur
 | `telemetry-db` | InfluxDB : stocke la télémétrie (séries temporelles) | non |
 | `alerts-db` | PostgreSQL : stocke les alertes, partagées par toutes les répliques du backend | non |
 
+Les services marqués « non » sont ceux qui gardent un état (bases de données) ou servent de point d'entrée unique.
+
+## Architecture
+
+```
+sensor-simulator ──POST /telemetry──▶ load-balancer:8000 ──▶ backend ──▶ telemetry-db (InfluxDB)
+                                                               │    └──▶ alerts-db (PostgreSQL)
+                                                               │
+                                                               │ WebSocket (alertes)
+                                                               ▼
+navigateur ──▶ load-balancer:3000 ──▶ frontend ──REST + WebSocket──▶ load-balancer:8000 ──▶ backend
+```
+
+Le navigateur ne parle qu'au frontend, c'est le frontend qui interroge le backend et relaie les alertes en direct.
+
+## Fonctionnement des alertes
+
+Chaque mesure reçue est comparée à des seuils (définis dans `backend/app/config.py`) :
+
+| Capteur | Warning | Critical |
+|---|---|---|
+| Vibration | 4 mm/s | 6 mm/s |
+| Température | 70 °C | 85 °C |
+| Pression | 8 bar | 10 bar |
+
+Si un seuil est dépassé, une alerte est enregistrée dans PostgreSQL et envoyée en direct au dashboard. Une nouvelle alerte n'est créée pour un même capteur que si la sévérité augmente (warning → critical), pour ne pas spammer.
+
+Pour la démo, la première machine de chaque simulateur dérive petit à petit : on voit un **warning vibration au bout d'environ 1 min 40** et un **critical vibration vers 3 min 20** après le démarrage. Les autres machines restent normales.
+
+Une machine qui n'envoie plus de mesure depuis 30 secondes passe en **Hors ligne** (carte grisée) sur le dashboard. Ça permet de repérer un capteur en panne, ou un simulateur arrêté après un scale down. Elle repasse à son état normal dès qu'une nouvelle mesure arrive.
+
 ## Démarrage
 
 Prérequis : Docker Desktop lancé.
@@ -45,7 +76,7 @@ docker compose exec -e BACKEND_URL=http://load-balancer:8000 -e SENSOR_API_KEY f
 ## Scalabilité
 
 ```bash
-docker compose up -d --scale backend=3 --scale sensor-simulator=3
+docker compose up -d --scale backend=3 --scale frontend=2 --scale sensor-simulator=3
 ```
 
 - nginx découvre automatiquement les nouvelles répliques via le DNS de Docker et répartit les requêtes entre elles.
@@ -94,5 +125,5 @@ Revenir à une seule réplique : `docker compose up -d --scale backend=1 --scale
 | `backend/`, `frontend/`, `sensor-simulator/` | Code des services |
 | `load-balancer/` | Configuration nginx du load balancer |
 | `alerts-db/` | Schéma PostgreSQL des alertes, appliqué au premier démarrage |
-| `presentation/` | Slides de soutenance (PDF, PPTX, HTML) |
-| `docs/` | [Consigne du projet](docs/consigne.md) et spécification de conception |
+| `presentation/` | Slides de soutenance |
+| `docs/` | [Consigne du projet](docs/consigne.md) |

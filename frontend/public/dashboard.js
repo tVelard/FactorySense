@@ -1,7 +1,8 @@
 (function () {
   const initial = window.__INITIAL__ || { machines: [], activeAlerts: [], sensors: [] };
   const SENSORS = Object.fromEntries(initial.sensors.map((s) => [s.key, s]));
-  const STATUS_LABELS = { ok: 'Normal', warning: 'Avertissement', critical: 'Critique' };
+  const STATUS_LABELS = { ok: 'Normal', warning: 'Avertissement', critical: 'Critique', offline: 'Hors ligne' };
+  const OFFLINE_AFTER_MS = 30000; // ~10 missed readings at the simulator's 3s interval
   const SEVERITY_LABELS = { warning: 'Avertissement', critical: 'Critique' };
 
   const css = getComputedStyle(document.documentElement);
@@ -294,6 +295,18 @@
         time.textContent = formatTime(m.latest.timestamp);
       }
     }
+    markOfflineMachines(new Set(machines.map((m) => m.machine_id)));
+  }
+
+  // A machine is offline when the backend no longer lists it or its last reading is too old.
+  function markOfflineMachines(listedIds) {
+    for (const card of document.querySelectorAll('.machine-card')) {
+      const lastReading = card.querySelector('.machine-foot time')?.dateTime;
+      const stale = !lastReading || Date.now() - new Date(lastReading) > OFFLINE_AFTER_MS;
+      if (!listedIds.has(card.dataset.machineId) || stale) {
+        setMachineStatus(card.dataset.machineId, 'offline');
+      }
+    }
   }
 
   // Init --------------------------------------------------------------------
@@ -308,5 +321,6 @@
     Object.keys(SENSORS).forEach((sensor) => loadChart(m.machine_id, sensor));
   });
   connectWebSocket();
+  refreshMachines();
   setInterval(refreshMachines, 5000);
 })();

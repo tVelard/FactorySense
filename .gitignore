@@ -4,3 +4,6 @@ __pycache__/
 node_modules/
 *.db
 .pytest_cache/
+.venv/
+~$*
+.DS_Store

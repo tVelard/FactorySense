@@ -165,6 +165,9 @@ h1, h2, p { margin: 0; }
 .status[data-status='warning']::before { background: var(--warning); }
 .status[data-status='critical'] { background: var(--critical-bg); color: var(--critical); }
 .status[data-status='critical']::before { background: var(--critical); }
+.status[data-status='offline'] { color: var(--text-3); }
+.status[data-status='offline']::before { background: var(--text-3); }
+.machine-card[data-status='offline'] { opacity: 0.55; }
 
 .reading { padding: 0.75rem 1rem 0.5rem; }
 .reading + .reading { border-top: 1px solid var(--line); }
