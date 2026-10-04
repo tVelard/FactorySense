@@ -24,8 +24,6 @@ sensor-simulator ──POST /telemetry──▶ load-balancer:8000 ──▶ bac
 navigateur ──▶ load-balancer:3000 ──▶ frontend ──REST + WebSocket──▶ load-balancer:8000 ──▶ backend
 ```
 
-Le navigateur ne parle qu'au frontend, c'est le frontend qui interroge le backend et relaie les alertes en direct.
-
 ## Fonctionnement des alertes
 
 Chaque mesure reçue est comparée à des seuils (définis dans `backend/app/config.py`) :
@@ -40,7 +38,7 @@ Si un seuil est dépassé, une alerte est enregistrée dans PostgreSQL et envoy�
 
 Pour la démo, la première machine de chaque simulateur dérive petit à petit : on voit un **warning vibration au bout d'environ 1 min 40** et un **critical vibration vers 3 min 20** après le démarrage. Les autres machines restent normales.
 
-Une machine qui n'envoie plus de mesure depuis 30 secondes passe en **Hors ligne** (carte grisée) sur le dashboard. Ça permet de repérer un capteur en panne, ou un simulateur arrêté après un scale down. Elle repasse à son état normal dès qu'une nouvelle mesure arrive.
+Une machine qui n'envoie plus de mesure depuis 30 secondes passe en **Hors ligne** sur le dashboard. Ça permet de repérer un capteur en panne, ou un simulateur arrêté après un scale down. Elle repasse à son état normal dès qu'une nouvelle mesure arrive.
 
 ## Démarrage
 
@@ -57,6 +55,18 @@ docker compose up -d --build
 Arrêter : `docker compose down`. Pour effacer aussi les données : `docker compose down -v`.
 
 ## Tests
+
+Les tests vérifient avec des données fictives que la chaîne capteur → alerte → dashboard fonctionne :
+
+| Fichier | Ce qui est testé |
+|---|---|
+| `backend/tests/test_analysis.py` | La détection : une valeur est bien classée normal / warning / critical selon les seuils, et une alerte n'est relancée que si la sévérité augmente |
+| `backend/tests/test_alerts_api.py` | L'API de bout en bout : une mesure normale ne crée pas d'alerte, une mesure critique en crée une qu'on peut acquitter, et une requête sans clé API est refusée (`401`) |
+| `backend/tests/test_alerts_db.py` | L'enregistrement des alertes dans PostgreSQL : création, recherche, filtres, acquittement (les données écrites sont annulées à la fin de chaque test) |
+| `backend/tests/test_ws.py` | La diffusion WebSocket du backend : les alertes sont envoyées à tous les clients connectés, et un client déconnecté est retiré |
+| `frontend/test/ws-relay.test.js` | Le relais du frontend : une mesure critique envoyée au backend arrive bien en direct sur le WebSocket du frontend, comme pour le navigateur |
+
+Le test du relais envoie une fausse machine (`ws-test-…`) avec l'heure actuelle : elle apparaît sur le dashboard après un rechargement, puis passe hors ligne. Les tests d'API utilisent une date ancienne, donc leurs machines n'apparaissent pas.
 
 La stack doit être lancée.
 

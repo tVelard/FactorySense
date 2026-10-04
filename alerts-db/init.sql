@@ -11,5 +11,4 @@ CREATE TABLE alerts (
     acknowledged_at TEXT
 );
 
--- At most one active alert per machine/sensor, even with several backend replicas writing.
 CREATE UNIQUE INDEX one_active_alert ON alerts (machine_id, sensor) WHERE status = 'active';
